@@ -24,6 +24,7 @@ contract ERC4626Handler {
             address actor = address(uint160(0xA000 + i));
             actors.push(actor);
             asset.mint(actor, 1e30);
+            vm.prank(actor);
             asset.approve(address(vault), type(uint256).max);
         }
     }
