@@ -16,6 +16,8 @@ contract ERC4626Handler {
     uint256 public ghost_totalDeposited;
     uint256 public ghost_totalWithdrawn;
     uint256 public ghost_donations;
+    uint256 public ghost_assetsBeforeDonation;
+    uint256 public ghost_assetsAfterDonation;
 
     constructor(IERC4626 vault_, MockERC20 asset_) {
         vault = vault_;
@@ -51,8 +53,13 @@ contract ERC4626Handler {
     function donate(uint256 amount, uint256 actorSeed) external {
         amount = bound(amount, 1, MAX_ASSETS / 10);
         address actor = actors[actorSeed % ACTOR_COUNT];
+
+        ghost_assetsBeforeDonation = vault.totalAssets();
+
         vm.prank(actor);
         asset.transfer(address(vault), amount);
+
+        ghost_assetsAfterDonation = vault.totalAssets();
         ghost_donations += amount;
     }
 
