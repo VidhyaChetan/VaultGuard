@@ -33,7 +33,12 @@ abstract contract ERC4626InvariantTest is StdInvariant {
     }
 
     function invariant_donationsIncreaseOrPreserveTotalAssets() public view {
-        require(handler.ghost_donations() == 0 || vault.totalAssets() > 0, "empty after donation");
+        if (handler.ghost_donations() == 0) return;
+
+        require(
+            handler.ghost_assetsAfterDonation() >= handler.ghost_assetsBeforeDonation(),
+            "donation decreased total assets"
+        );
     }
 
     function invariant_convertRoundTripShares(uint256 shares) public view {
