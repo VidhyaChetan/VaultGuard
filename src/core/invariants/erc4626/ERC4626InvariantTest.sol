@@ -41,11 +41,20 @@ abstract contract ERC4626InvariantTest is StdInvariant {
         );
     }
 
-    function invariant_convertRoundTripShares(uint256 shares) public view {
-        shares = bound(shares, 0, vault.totalSupply());
-        if (shares == 0) return;
-        uint256 assets = vault.convertToAssets(shares);
-        uint256 back = vault.convertToShares(assets);
-        require(back <= shares, "convert round-trip favors user");
+    function invariant_convertRoundTripShares() public view {
+        uint256 supply = vault.totalSupply();
+        if (supply == 0) return;
+
+        for (uint256 i; i < handler.ACTOR_COUNT(); ++i) {
+            address actor = handler.actors(i);
+            uint256 shares = vault.balanceOf(actor);
+
+            if (shares == 0) continue;
+
+            uint256 assets = vault.convertToAssets(shares);
+            uint256 back = vault.convertToShares(assets);
+
+            require(back <= shares, "convert round-trip favors user");
     }
+}
 }

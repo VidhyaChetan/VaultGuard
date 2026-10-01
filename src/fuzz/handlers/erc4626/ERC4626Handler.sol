@@ -4,6 +4,11 @@ pragma solidity ^0.8.24;
 import { IERC4626 } from "../../../interfaces/erc4626/IERC4626.sol";
 import { MockERC20 } from "../../../mocks/tokens/MockERC20.sol";
 
+interface Vm {
+        function prank(address) external;
+    }
+
+
 /// @notice Fuzz handler: bounded random ERC-4626 actions across N actors.
 contract ERC4626Handler {
     IERC4626 public immutable vault;
@@ -69,9 +74,5 @@ contract ERC4626Handler {
         return x;
     }
 
-    Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code"))));
-
-    interface Vm {
-        function prank(address) external;
-    }
+    Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 }
