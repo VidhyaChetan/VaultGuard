@@ -39,7 +39,7 @@ abstract contract ERC4626InvariantTest is StdInvariant {
         uint256 before = vault.balanceOf(actor);
         vm.prank(actor);
         uint256 received = vault.deposit(assets, actor);
-        require(previewed >= received, "previewDeposit < actual shares");
+        require(previewed <= received, "previewDeposit > actual shares");
         require(vault.balanceOf(actor) == before + received, "share accounting");
     }
 
