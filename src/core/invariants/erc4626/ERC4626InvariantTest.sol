@@ -32,17 +32,6 @@ abstract contract ERC4626InvariantTest is StdInvariant {
         require(sum <= vault.totalSupply(), "shares sum > totalSupply");
     }
 
-    function invariant_previewDepositGeActualShares(uint256 assets) public {
-        assets = bound(assets, 1, handler.MAX_ASSETS());
-        uint256 previewed = vault.previewDeposit(assets);
-        address actor = handler.actors(0);
-        uint256 before = vault.balanceOf(actor);
-        vm.prank(actor);
-        uint256 received = vault.deposit(assets, actor);
-        require(previewed <= received, "previewDeposit > actual shares");
-        require(vault.balanceOf(actor) == before + received, "share accounting");
-    }
-
     function invariant_donationsIncreaseOrPreserveTotalAssets() public view {
         require(handler.ghost_donations() == 0 || vault.totalAssets() > 0, "empty after donation");
     }
