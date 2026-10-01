@@ -1,0 +1,34 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import { Test } from "forge-std/Test.sol";
+import { MockERC20 } from "../../../src/mocks/tokens/MockERC20.sol";
+import { MockERC4626 } from "../../../src/mocks/vaults/reference/MockERC4626.sol";
+
+contract MockERC4626Test is Test {
+    MockERC20 internal asset;
+    MockERC4626 internal vault;
+
+    address internal user = address(0x1);
+
+    function setUp() public {
+        asset = new MockERC20();
+        vault = new MockERC4626(asset);
+
+        asset.mint(user, 1_000 ether);
+
+        vm.prank(user);
+        asset.approve(address(vault), type(uint256).max);
+    }
+
+    function test_previewDepositDoesNotOverstateShares() public {
+        uint256 assets = 100 ether;
+
+        uint256 previewed = vault.previewDeposit(assets);
+
+        vm.prank(user);
+        uint256 received = vault.deposit(assets, user);
+
+        assertLe(previewed, received);
+    }
+}
