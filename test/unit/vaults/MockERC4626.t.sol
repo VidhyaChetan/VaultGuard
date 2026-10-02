@@ -31,4 +31,21 @@ contract MockERC4626Test is Test {
 
         assertLe(previewed, received);
     }
+
+    function test_mintDoesNotChargeLessThanPreview() public {
+        uint256 shares = 100 ether;
+
+        uint256 previewedAssets = vault.previewMint(shares);
+
+        uint256 balanceBefore = asset.balanceOf(user);
+
+        vm.prank(user);
+        uint256 chargedAssets = vault.mint(shares, user);
+
+        uint256 balanceAfter = asset.balanceOf(user);
+
+        assertEq(chargedAssets, previewedAssets);
+        assertEq(balanceBefore - balanceAfter, chargedAssets);
+        assertEq(vault.balanceOf(user), shares);
+    }
 }
