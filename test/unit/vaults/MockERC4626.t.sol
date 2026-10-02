@@ -48,4 +48,26 @@ contract MockERC4626Test is Test {
         assertEq(balanceBefore - balanceAfter, chargedAssets);
         assertEq(vault.balanceOf(user), shares);
     }
+
+    function test_previewMintRoundsUpForFractionalAssets() public {
+        vm.prank(user);
+        vault.deposit(3, user);
+
+        vm.prank(user);
+        asset.transfer(address(vault), 1);
+
+        // Vault now has 4 assets backing 3 shares.
+        // Minting 1 share requires ceil(1 * 4 / 3) = 2 assets.
+        uint256 shares = 1;
+
+        uint256 previewedAssets = vault.previewMint(shares);
+
+        assertEq(previewedAssets, 2);
+
+        vm.prank(user);
+        uint256 chargedAssets = vault.mint(shares, user);
+
+        assertEq(chargedAssets, 2);
+        assertEq(vault.balanceOf(user), 4);
+    }
 }
