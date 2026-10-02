@@ -172,4 +172,9 @@ contract MockERC4626Test is Test {
 
         assertEq(maxDeposit, type(uint256).max);
     }
+    function test_maxMintAllowsMaximumUint256() public view {
+        uint256 maxMint = vault.maxMint(user);
+
+        assertEq(maxMint, type(uint256).max);
+    }
 }
