@@ -114,4 +114,57 @@ contract MockERC4626Test is Test {
         assertEq(asset.balanceOf(user), balanceBefore + 1);
         assertEq(vault.balanceOf(user), 2);
     }
+    function test_withdrawDoesNotBurnMoreThanPreview() public {
+        uint256 depositAssets = 100 ether;
+
+        vm.prank(user);
+        vault.deposit(depositAssets, user);
+
+        uint256 withdrawAssets = 40 ether;
+        uint256 previewedShares = vault.previewWithdraw(withdrawAssets);
+
+        uint256 sharesBefore = vault.balanceOf(user);
+        uint256 balanceBefore = asset.balanceOf(user);
+
+        vm.prank(user);
+        uint256 burnedShares = vault.withdraw(
+            withdrawAssets,
+            user,
+            user
+        );
+
+        uint256 sharesAfter = vault.balanceOf(user);
+        uint256 balanceAfter = asset.balanceOf(user);
+
+        assertEq(burnedShares, previewedShares);
+        assertEq(sharesBefore - sharesAfter, burnedShares);
+        assertEq(balanceAfter - balanceBefore, withdrawAssets);
+    }
+    function test_previewWithdrawRoundsUpForFractionalShares() public {
+        vm.prank(user);
+        vault.deposit(3, user);
+
+        vm.prank(user);
+        asset.transfer(address(vault), 1);
+
+        // Vault now has 4 assets backing 3 shares.
+        // Withdrawing 1 asset requires ceil(1 * 3 / 4) = 1 share.
+        uint256 withdrawAssets = 1;
+
+        uint256 previewedShares = vault.previewWithdraw(withdrawAssets);
+
+        assertEq(previewedShares, 1);
+
+        uint256 sharesBefore = vault.balanceOf(user);
+
+        vm.prank(user);
+        uint256 burnedShares = vault.withdraw(
+            withdrawAssets,
+            user,
+            user
+        );
+
+        assertEq(burnedShares, 1);
+        assertEq(sharesBefore - vault.balanceOf(user), 1);
+    }
 }
