@@ -70,4 +70,48 @@ contract MockERC4626Test is Test {
         assertEq(chargedAssets, 2);
         assertEq(vault.balanceOf(user), 4);
     }
+
+    function test_redeemDoesNotReturnLessThanPreview() public {
+        uint256 depositAssets = 100 ether;
+
+        vm.prank(user);
+        uint256 mintedShares = vault.deposit(depositAssets, user);
+
+        uint256 previewedAssets = vault.previewRedeem(mintedShares);
+
+        uint256 balanceBefore = asset.balanceOf(user);
+
+        vm.prank(user);
+        uint256 redeemedAssets = vault.redeem(mintedShares, user, user);
+
+        uint256 balanceAfter = asset.balanceOf(user);
+
+        assertEq(redeemedAssets, previewedAssets);
+        assertEq(balanceAfter - balanceBefore, redeemedAssets);
+        assertEq(vault.balanceOf(user), 0);
+    }
+    function test_previewRedeemRoundsDownForFractionalAssets() public {
+        vm.prank(user);
+        vault.deposit(3, user);
+
+        vm.prank(user);
+        asset.transfer(address(vault), 1);
+
+        // Vault now has 4 assets backing 3 shares.
+        // Redeeming 1 share gives floor(1 * 4 / 3) = 1 asset.
+        uint256 shares = 1;
+
+        uint256 previewedAssets = vault.previewRedeem(shares);
+
+        assertEq(previewedAssets, 1);
+
+        uint256 balanceBefore = asset.balanceOf(user);
+
+        vm.prank(user);
+        uint256 redeemedAssets = vault.redeem(shares, user, user);
+
+        assertEq(redeemedAssets, 1);
+        assertEq(asset.balanceOf(user), balanceBefore + 1);
+        assertEq(vault.balanceOf(user), 2);
+    }
 }
