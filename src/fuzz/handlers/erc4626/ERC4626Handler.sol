@@ -45,6 +45,17 @@ contract ERC4626Handler {
         require(shares > 0, "zero shares");
     }
 
+    function mint(uint256 shares, uint256 actorSeed) external {
+        shares = bound(shares, 1, MAX_ASSETS);
+        address actor = actors[actorSeed % ACTOR_COUNT];
+
+        vm.prank(actor);
+        uint256 assets = vault.mint(shares, actor);
+
+        ghost_totalDeposited += assets;
+        require(assets > 0, "zero assets");
+    }
+
     function withdraw(uint256 assets, uint256 actorSeed) external {
         address actor = actors[actorSeed % ACTOR_COUNT];
         uint256 maxW = vault.maxWithdraw(actor);
