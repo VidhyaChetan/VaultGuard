@@ -199,4 +199,29 @@ contract MockERC4626Test is Test {
 
         assertEq(maxWithdraw, expectedAssets);
     }
+
+    function test_donationDoesNotCompletelyZeroVictimShares() public {
+        // Attacker becomes the first depositor.
+        vm.prank(user);
+        vault.deposit(1 ether, user);
+
+        // Attacker donates 1 ether without receiving additional shares.
+        vm.prank(user);
+        asset.transfer(address(vault), 1 ether);
+
+        // Victim needs their own funded account and approval.
+        address victim = address(0x2);
+        asset.mint(victim, 5 ether);
+
+        vm.prank(victim);
+        asset.approve(address(vault), type(uint256).max);
+
+        // Victim deposits 5 ether.
+        vm.prank(victim);
+        uint256 victimShares = vault.deposit(5 ether, victim);
+
+        // 5 ETH × 1 share / 2 ETH = 2.5 shares.
+        assertEq(victimShares, 2.5 ether);
+        assertEq(vault.balanceOf(victim), 2.5 ether);
+    }
 }
