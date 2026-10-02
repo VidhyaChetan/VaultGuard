@@ -167,4 +167,9 @@ contract MockERC4626Test is Test {
         assertEq(burnedShares, 1);
         assertEq(sharesBefore - vault.balanceOf(user), 1);
     }
+    function test_maxDepositAllowsMaximumUint256() public view {
+        uint256 maxDeposit = vault.maxDeposit(user);
+
+        assertEq(maxDeposit, type(uint256).max);
+    }
 }
