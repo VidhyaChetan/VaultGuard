@@ -188,4 +188,15 @@ contract MockERC4626Test is Test {
 
         assertEq(maxRedeem, userShares);
     }
+    function test_maxWithdrawEqualsAssetsForUserShares() public {
+        uint256 depositAssets = 100 ether;
+
+        vm.prank(user);
+        vault.deposit(depositAssets, user);
+
+        uint256 maxWithdraw = vault.maxWithdraw(user);
+        uint256 expectedAssets = vault.convertToAssets(vault.balanceOf(user));
+
+        assertEq(maxWithdraw, expectedAssets);
+    }
 }
