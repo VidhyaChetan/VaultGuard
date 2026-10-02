@@ -37,17 +37,23 @@ contract VulnerableVaultTest is Test {
         vault.deposit(5 ether, victim);
 
         // Victim receives zero shares because the vulnerable vault
-        // calculates shares using the post-deposit asset balance.
+        // calculates shares using the vault's post-deposit asset balance.
         assertEq(vault.balanceOf(victim), 0);
 
         // Attacker still owns the only share.
         assertEq(vault.balanceOf(attacker), 1);
 
-        // The vault now holds the attacker's donation + victim's deposit.
+        // The vault holds the attacker's 5 ether donation,
+        // the victim's 5 ether deposit, and the attacker's original 1 wei.
         assertEq(asset.balanceOf(address(vault)), 10 ether + 1);
+        assertEq(vault.totalAssets(), 10 ether + 1);
 
         // All outstanding shares still belong to the attacker.
         assertEq(vault.totalSupply(), 1);
         assertEq(vault.balanceOf(attacker), vault.totalSupply());
-}
+
+        // The victim's 5 ether was transferred into the vault,
+        // but the victim received no shares.
+        assertEq(asset.balanceOf(victim), 5 ether);
+    }
 }
