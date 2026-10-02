@@ -66,6 +66,21 @@ contract ERC4626Handler {
         ghost_totalWithdrawn += assets;
     }
 
+    function redeem(uint256 shares, uint256 actorSeed) external {
+        address actor = actors[actorSeed % ACTOR_COUNT];
+
+        uint256 maxR = vault.maxRedeem(actor);
+        if (maxR == 0) return;
+
+        shares = bound(shares, 1, maxR);
+
+        vm.prank(actor);
+        uint256 assets = vault.redeem(shares, actor, actor);
+
+        ghost_totalWithdrawn += assets;
+        require(assets > 0, "zero assets");
+    }
+
     function donate(uint256 amount, uint256 actorSeed) external {
         amount = bound(amount, 1, MAX_ASSETS / 10);
         address actor = actors[actorSeed % ACTOR_COUNT];
