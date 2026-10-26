@@ -12,6 +12,7 @@ It combines:
 - ERC-4626 preview/conversion properties
 - adversarial vault behavior
 - differential testing between a reference implementation and a vulnerable implementation
+- a local React dashboard for exploring vault state, Foundry results, and the inflation scenario
 
 The goal is to demonstrate how ERC-4626 security properties can be expressed as executable tests and how seemingly small accounting decisions can create serious share-allocation vulnerabilities.
 
@@ -106,9 +107,10 @@ This makes the security impact directly observable rather than relying only on i
 ## Project structure
 
 ```text
-forge-4626-invariants/
+VaultGuard/
 ├── foundry.toml
 ├── remappings.txt
+├── frontend/             # React/Vite dashboard and setup guide
 ├── src/
 │   ├── interfaces/erc4626/
 │   │   └── IERC4626.sol
@@ -194,11 +196,48 @@ The project explicitly tests first-depositor and donation-based inflation scenar
 
 ## Running the project
 
-Install Foundry and clone the repository, then run:
+Install Foundry and Node.js, clone the repository, and initialize the test dependency:
 
 ```bash
+git submodule update --init --recursive
 forge test
 ```
+
+To run the dashboard with live contract data, keep these processes open in separate terminals:
+
+```bash
+# Terminal 1: local blockchain
+anvil
+```
+
+```bash
+# Terminal 2: frontend
+cd frontend
+npm install
+npm run dev
+```
+
+Open the **Local** URL printed by Vite (usually `http://localhost:5173`). Port `8545` is Anvil's RPC endpoint, not the dashboard.
+
+From the repository root, deploy the token and both vaults to the running Anvil node. First set `ANVIL_PRIVATE_KEY` to a development private key printed by Anvil. After deploying the token, set `TOKEN_ADDRESS` to its `Deployed to` address. Keep `--constructor-args` at the end of the vault commands, after all other options:
+
+```bash
+export ANVIL_PRIVATE_KEY='0xPASTE_ANVIL_DEVELOPMENT_KEY'
+forge create src/mocks/tokens/MockERC20.sol:MockERC20 --rpc-url http://127.0.0.1:8545 --private-key "$ANVIL_PRIVATE_KEY" --broadcast
+export TOKEN_ADDRESS='0xPASTE_TOKEN_DEPLOYED_TO_ADDRESS'
+forge create src/mocks/vaults/reference/MockERC4626.sol:MockERC4626 --rpc-url http://127.0.0.1:8545 --private-key "$ANVIL_PRIVATE_KEY" --broadcast --constructor-args "$TOKEN_ADDRESS"
+forge create src/mocks/vaults/vulnerable/VulnerableVault.sol:VulnerableVault --rpc-url http://127.0.0.1:8545 --private-key "$ANVIL_PRIVATE_KEY" --broadcast --constructor-args "$TOKEN_ADDRESS"
+```
+
+Enter the three resulting addresses in **Environment**, save them, and click **Check connection**. A new Anvil process starts a fresh chain, so redeploy and update the addresses after a restart. For wallet transactions, connect a browser wallet to `http://127.0.0.1:8545` on chain ID `31337` with a funded Anvil development account.
+
+To view test results in the dashboard, run this from the repository root, then import `frontend/forge-results.json` on the **Security Tests** page:
+
+```bash
+forge test --json > frontend/forge-results.json
+```
+
+The **Vulnerability Lab** is a deterministic local calculation of the contracts' share formulas, not an on-chain transaction. The **Transaction History** page scans direct calls to the configured contracts in the latest 200 blocks. See [frontend/README.md](frontend/README.md) for the full frontend guide.
 
 Run individual test groups with:
 
